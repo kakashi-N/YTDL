@@ -4,7 +4,6 @@ const app = express();
 
 app.get('/dl', async (req, res) => {
   const { url } = req.query;
-
   if (!url) {
     return res.status(400).json({ status: 'error', message: 'Missing url parameter' });
   }
@@ -37,6 +36,6 @@ app.get('/dl', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("API is running on http://localhost:3000");
-});
+// Vercel uses process.env.PORT automatically
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
