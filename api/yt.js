@@ -8,7 +8,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Fetch video info from SocialPlug
     const response = await axios.get(
       `https://ytdl.socialplug.io/api/video-info?url=${encodeURIComponent(url)}`,
       {
@@ -29,25 +28,7 @@ module.exports = async (req, res) => {
       }
     );
 
-    const data = response.data;
-
-    // Transform into clean JSON with multiple qualities
-    const formatted = {
-      status: 'success',
-      urls: []
-    };
-
-    if (data?.urls) {
-      data.urls.forEach(video => {
-        formatted.urls.push({
-          quality: video.quality,
-          url: video.url
-        });
-      });
-    }
-
-    res.status(200).json(formatted);
-
+    res.status(200).json(response.data);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ status: 'error', message: 'Failed to fetch video info' });
