@@ -28,10 +28,16 @@ module.exports = async (req, res) => {
       }
     );
 
-    // Extract only the URLs
-    const urlsOnly = response.data.format_options.video.mp4.map(item => item.url);
+    // Map only quality and URL
+    const urlsWithQuality = response.data.format_options.video.mp4.map(item => ({
+      quality: item.quality,
+      url: item.url
+    }));
 
-    res.status(200).json(urlsOnly);
+    res.status(200).json({
+      status: 'success',
+      urls: urlsWithQuality
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ status: 'error', message: 'Failed to fetch video info' });
