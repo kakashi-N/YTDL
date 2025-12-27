@@ -28,14 +28,14 @@ module.exports = async (req, res) => {
       }
     );
 
-    // Extract only the qualities you want
+    // Extract only the 480p, 720p, 1080p video URLs
     const videos = response.data.format_options.video.mp4;
-    const filteredQualities = ['480p', '720p', '1080p'];
-    const result = videos
-      .filter(v => filteredQualities.includes(v.quality))
-      .map(v => ({ quality: v.quality }));
+    const desiredQualities = ['480p', '720p', '1080p'];
+    const urls = videos
+      .filter(v => desiredQualities.includes(v.quality))
+      .map(v => v.url); // Just URLs
 
-    res.status(200).json({ status: 'success', urls: result });
+    res.status(200).json(urls); // Return array of direct video URLs
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ status: 'error', message: 'Failed to fetch video info' });
