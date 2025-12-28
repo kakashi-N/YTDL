@@ -4,44 +4,34 @@ module.exports = async (req, res) => {
   const { url } = req.query;
 
   if (!url) {
-    return res.status(400).json({ status: 'error', message: 'Missing url parameter' });
+    return res.status(400).json({ error: 'Missing url parameter' });
   }
 
   try {
-    const response = await axios.get(
+    const { data } = await axios.get(
       `https://ytdl.socialplug.io/api/video-info?url=${encodeURIComponent(url)}`,
       {
         headers: {
-          'authority': 'ytdl.socialplug.io',
-          'accept': 'application/json, text/plain, */*',
-          'origin': 'https://www.socialplug.io',
-          'referer': 'https://www.socialplug.io/',
           'user-agent':
-            'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/107.0.0.0 Mobile Safari/537.36'
+            'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/107.0.0.0 Mobile Safari/537.36',
+          'origin': 'https://www.socialplug.io',
+          'referer': 'https://www.socialplug.io/'
         }
       }
     );
 
-    // 🔥 Get all formats
-    const formats = response.data.formats || response.data.adaptiveFormats || [];
+    const audio =
+      data.format_options.audio?.mp4?.[0] ||
+      data.format_options.audio?.webm?.[0];
 
-    // 🎧 Filter audio-only formats
-    const audioFormats = formats.filter(f =>
-      f.mimeType && f.mimeType.startsWith('audio/')
-    );
-
-    if (!audioFormats.length) {
-      return res.status(404).json({ status: 'error', message: 'Audio not found' });
+    if (!audio) {
+      return res.status(404).json({ error: 'Audio not found' });
     }
 
-    // ✅ Pick best audio (highest bitrate)
-    audioFormats.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+    // ✅ ONLY mimeType
+    res.json({ mimeType: audio.mimeType });
 
-    // 🔥 RETURN ONLY URL (plain response)
-    res.status(200).send(audioFormats[0].url);
-
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ status: 'error', message: 'Failed to fetch audio' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch audio' });
   }
 };
