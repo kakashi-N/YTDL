@@ -14,30 +14,35 @@ module.exports = async (req, res) => {
         headers: {
           'authority': 'ytdl.socialplug.io',
           'accept': 'application/json, text/plain, */*',
-          'accept-language': 'en-US,en;q=0.9',
           'origin': 'https://www.socialplug.io',
           'referer': 'https://www.socialplug.io/',
-          'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"',
-          'sec-ch-ua-mobile': '?1',
-          'sec-ch-ua-platform': '"Android"',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-site',
-          'user-agent': 'Mozilla/5.0 (Linux; Android 11; RMX3261) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'
+          'user-agent':
+            'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/107.0.0.0 Mobile Safari/537.36'
         }
       }
     );
 
-    // Extract only the 480p, 720p, 1080p video URLs
-    const videos = response.data.format_options.video.mp4;
-    const desiredQualities = ['480p', '720p', '1080p'];
-    const urls = videos
-      .filter(v => desiredQualities.includes(v.quality))
-      .map(v => v.url); // Just URLs
+    // 🔥 Extract audio formats (mp4 / webm)
+    const audioFormats = response.data.format_options.audio;
 
-    res.status(200).json(urls); // Return array of direct video URLs
+    // Find first available audio URL
+    let audioUrl = null;
+
+    if (audioFormats.mp4 && audioFormats.mp4.length > 0) {
+      audioUrl = audioFormats.mp4[0].url;
+    } else if (audioFormats.webm && audioFormats.webm.length > 0) {
+      audioUrl = audioFormats.webm[0].url;
+    }
+
+    if (!audioUrl) {
+      return res.status(404).json({ status: 'error', message: 'Audio not found' });
+    }
+
+    // ✅ Return ONLY audio URL
+    res.status(200).json(audioUrl);
+
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ status: 'error', message: 'Failed to fetch video info' });
+    res.status(500).json({ status: 'error', message: 'Failed to fetch audio' });
   }
 };
