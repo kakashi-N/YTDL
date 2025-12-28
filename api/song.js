@@ -22,24 +22,23 @@ module.exports = async (req, res) => {
       }
     );
 
-    // 🔥 Extract audio formats (mp4 / webm)
-    const audioFormats = response.data.format_options.audio;
+    // 🔥 Get all formats
+    const formats = response.data.formats || response.data.adaptiveFormats || [];
 
-    // Find first available audio URL
-    let audioUrl = null;
+    // 🎧 Filter audio-only formats
+    const audioFormats = formats.filter(f =>
+      f.mimeType && f.mimeType.startsWith('audio/')
+    );
 
-    if (audioFormats.mp4 && audioFormats.mp4.length > 0) {
-      audioUrl = audioFormats.mp4[0].url;
-    } else if (audioFormats.webm && audioFormats.webm.length > 0) {
-      audioUrl = audioFormats.webm[0].url;
-    }
-
-    if (!audioUrl) {
+    if (!audioFormats.length) {
       return res.status(404).json({ status: 'error', message: 'Audio not found' });
     }
 
-    // ✅ Return ONLY audio URL
-    res.status(200).json(audioUrl);
+    // ✅ Pick best audio (highest bitrate)
+    audioFormats.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+
+    // 🔥 RETURN ONLY URL (plain response)
+    res.status(200).send(audioFormats[0].url);
 
   } catch (error) {
     console.error(error.message);
